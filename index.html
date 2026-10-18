@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#173b32">
+<meta name="description" content="Offline business sales, expenses and inventory tracker">
+<link rel="manifest" href="manifest.json">
+<title>Business Ledger</title>
+<style>
+:root{--green:#173b32;--green2:#246b55;--bg:#f3f6f4;--card:#fff;--text:#17211d;--muted:#68756e;--line:#dfe7e2;--red:#b42318;--amber:#946200}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}header{background:var(--green);color:white;padding:18px 16px 14px;position:sticky;top:0;z-index:5}header h1{font-size:20px;margin:0 0 4px}header p{margin:0;font-size:12px;opacity:.85}.wrap{max-width:900px;margin:auto;padding:14px 12px 90px}.tabs{display:flex;gap:6px;overflow:auto;margin:0 0 14px;padding-bottom:3px}.tab{border:1px solid var(--line);background:white;border-radius:22px;padding:10px 13px;white-space:nowrap;font-weight:650;color:var(--text)}.tab.active{background:var(--green);color:white;border-color:var(--green)}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 2px #15251c08}.metric small{display:block;color:var(--muted);font-size:12px}.metric strong{display:block;font-size:21px;margin-top:5px;overflow-wrap:anywhere}.metric .good{color:var(--green2)}.metric .bad{color:var(--red)}h2{font-size:17px;margin:2px 0 12px}h3{font-size:14px;margin:12px 0 8px}label{display:block;font-size:12px;font-weight:650;color:var(--muted);margin:0 0 5px}input,select,textarea{width:100%;font:inherit;font-size:15px;padding:11px;border:1px solid #cbd6cf;border-radius:9px;background:white;color:var(--text);margin-bottom:10px;min-width:0}textarea{min-height:70px;resize:vertical}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 10px}.full{grid-column:1/-1}button{font:inherit;border:0;border-radius:9px;padding:11px 14px;background:var(--green);color:white;font-weight:650;cursor:pointer}.secondary{background:#e7efea;color:var(--green)}.danger{background:#fae8e7;color:var(--red)}.actions{display:flex;gap:8px;flex-wrap:wrap}.hidden{display:none!important}.hint{font-size:12px;color:var(--muted);line-height:1.45}.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.listitem{padding:12px 0;border-bottom:1px solid var(--line)}.listitem:last-child{border-bottom:0}.listitem strong{display:block;font-size:14px}.listitem small{color:var(--muted);font-size:12px}.amount{font-weight:750;white-space:nowrap}.negative{color:var(--red)}.positive{color:var(--green2)}.pill{font-size:11px;padding:4px 7px;border-radius:20px;background:#e7efea;color:var(--green);white-space:nowrap}.pill.low{background:#fff1d6;color:#795400}.empty{padding:22px 8px;text-align:center;color:var(--muted);font-size:13px}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:9px 7px;border-bottom:1px solid var(--line);white-space:nowrap}th{color:var(--muted);font-size:11px}footer{font-size:11px;color:var(--muted);text-align:center;padding:16px 0}.notice{background:#fff5d9;border:1px solid #f1dda0;color:#654d08;border-radius:10px;padding:10px;font-size:12px;margin-bottom:12px}
+@media(min-width:650px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}.wrap{padding:20px 18px 50px}.metric strong{font-size:23px}}
+</style>
+</head>
+<body>
+<header><h1>Business Ledger</h1><p>Sales · Expenses · Inventory · Offline-first · INR ₹</p></header>
+<main class="wrap">
+<div class="tabs" id="tabs">
+<button class="tab active" data-page="dashboard">Dashboard</button>
+<button class="tab" data-page="sales">Sales & Receipts</button>
+<button class="tab" data-page="expenses">Expenses</button>
+<button class="tab" data-page="inventory">Inventory</button>
+<button class="tab" data-page="reports">Reports & Backup</button>
+</div>
+<div id="dashboard" class="page">
+<div class="grid">
+<div class="card metric"><small>Sales recorded</small><strong id="mSales">₹0</strong></div>
+<div class="card metric"><small>Payments received</small><strong id="mReceived" class="good">₹0</strong></div>
+<div class="card metric"><small>Expenses recorded</small><strong id="mExpenses" class="bad">₹0</strong></div>
+<div class="card metric"><small>Customer dues</small><strong id="mDues">₹0</strong></div>
+</div>
+<div class="card"><h2>Quick actions</h2><div class="actions"><button onclick="go('sales')">＋ Record sale</button><button class="secondary" onclick="go('expenses')">＋ Add expense</button><button class="secondary" onclick="go('inventory')">＋ Add product</button></div></div>
+<div class="card"><h2>Recent activity</h2><div id="recent"></div></div>
+<div class="notice">Data is saved on this device only. Export a backup regularly. Clearing browser/app storage or uninstalling may erase your records.</div>
+</div>
+
+<div id="sales" class="page hidden">
+<div class="card"><h2>Record a sale</h2>
+<form id="saleForm"><div class="formgrid">
+<div><label for="saleDate">Date</label><input id="saleDate" type="date" required></div>
+<div><label for="saleProduct">Product</label><select id="saleProduct" required></select></div>
+<div><label for="saleQty">Quantity sold</label><input id="saleQty" type="number" min="0.001" step="any" required placeholder="e.g. 2"></div>
+<div><label for="salePrice">Selling price per unit (₹)</label><input id="salePrice" type="number" min="0" step="0.01" required></div>
+<div><label for="saleCustomer">Customer (optional)</label><input id="saleCustomer" maxlength="100" placeholder="Customer name"></div>
+<div><label for="salePaid">Amount received now (₹)</label><input id="salePaid" type="number" min="0" step="0.01" value="0" required></div>
+<div><label for="saleMethod">Payment method</label><select id="saleMethod"><option>Cash</option><option>UPI</option><option>Bank transfer</option><option>Card</option><option>Credit / unpaid</option><option>Other</option></select></div>
+<div><label for="saleRef">Invoice / reference (optional)</label><input id="saleRef" maxlength="80" placeholder="Invoice number"></div>
+<div class="full"><label for="saleNotes">Notes (optional)</label><textarea id="saleNotes" maxlength="500" placeholder="Additional details"></textarea></div>
+</div><p class="hint" id="salePreview">Select a product and quantity to calculate the total.</p><button type="submit">Save sale</button></form></div>
+<div class="card"><h2>Sales & receipts history</h2><div class="formgrid"><div><label for="saleSearch">Search</label><input id="saleSearch" placeholder="Customer, product, invoice"></div><div><label for="saleMonth">Month filter</label><input id="saleMonth" type="month"></div></div><div id="salesList"></div></div>
+<div class="card"><h2>Receive a pending payment</h2><form id="receiptForm"><div class="formgrid"><div><label for="receiptDate">Date</label><input id="receiptDate" type="date" required></div><div><label for="receiptSale">Sale / customer due</label><select id="receiptSale" required></select></div><div><label for="receiptAmount">Amount received (₹)</label><input id="receiptAmount" type="number" min="0.01" step="0.01" required></div><div><label for="receiptMethod">Method</label><select id="receiptMethod"><option>UPI</option><option>Cash</option><option>Bank transfer</option><option>Card</option><option>Other</option></select></div></div><button type="submit">Save receipt</button></form><div id="receiptHistory"></div></div>
+</div>
+
+<div id="expenses" class="page hidden">
+<div class="card"><h2>Add an expense</h2><form id="expenseForm"><div class="formgrid">
+<div><label for="expDate">Date</label><input id="expDate" type="date" required></div>
+<div><label for="expCategory">Category</label><select id="expCategory"><option>Stock purchase</option><option>Rent</option><option>Utilities</option><option>Transport / delivery</option><option>Packaging</option><option>Staff / wages</option><option>Marketing</option><option>Repairs</option><option>Bank charges</option><option>Other</option></select></div>
+<div><label for="expAmount">Amount (₹)</label><input id="expAmount" type="number" min="0.01" step="0.01" required></div>
+<div><label for="expMethod">Paid by</label><select id="expMethod"><option>UPI</option><option>Cash</option><option>Bank transfer</option><option>Card</option><option>Credit / unpaid</option><option>Other</option></select></div>
+<div><label for="expVendor">Vendor / paid to (optional)</label><input id="expVendor" maxlength="100" placeholder="Supplier or payee"></div>
+<div><label for="expRef">Bill / reference (optional)</label><input id="expRef" maxlength="80" placeholder="Bill number"></div>
+<div class="full"><label for="expNotes">Notes (optional)</label><textarea id="expNotes" maxlength="500"></textarea></div>
+</div><button type="submit">Save expense</button></form></div>
+<div class="card"><h2>Expense history</h2><div class="formgrid"><div><label for="expSearch">Search</label><input id="expSearch" placeholder="Category, vendor, notes"></div><div><label for="expMonth">Month filter</label><input id="expMonth" type="month"></div></div><div id="expensesList"></div></div>
+</div>
+
+<div id="inventory" class="page hidden">
+<div class="card"><h2>Add / update product</h2><form id="productForm"><input type="hidden" id="productId"><div class="formgrid">
+<div><label for="prodName">Product name</label><input id="prodName" maxlength="120" required placeholder="e.g. Cotton T-shirt"></div>
+<div><label for="prodSku">SKU / code (optional)</label><input id="prodSku" maxlength="60" placeholder="Product code"></div>
+<div><label for="prodCost">Purchase cost per unit (₹)</label><input id="prodCost" type="number" min="0" step="0.01" required></div>
+<div><label for="prodPrice">Selling price per unit (₹)</label><input id="prodPrice" type="number" min="0" step="0.01" required></div>
+<div><label for="prodStock">Opening / current stock</label><input id="prodStock" type="number" min="0" step="any" required></div>
+<div><label for="prodLow">Low-stock alert threshold</label><input id="prodLow" type="number" min="0" step="any" value="5" required></div>
+<div class="full"><label for="prodNotes">Notes (optional)</label><input id="prodNotes" maxlength="250" placeholder="Size, colour, supplier, etc."></div>
+</div><div class="actions"><button type="submit" id="productSave">Save product</button><button type="button" class="secondary hidden" id="productCancel" onclick="resetProductForm()">Cancel edit</button></div></form></div>
+<div class="card"><h2>Current stock</h2><div class="formgrid"><div class="full"><label for="prodSearch">Search products</label><input id="prodSearch" placeholder="Product name or SKU"></div></div><div id="inventoryList"></div></div>
+<div class="card"><h2>Stock adjustment</h2><p class="hint">Use this to record stock received, damaged, or corrected. It changes quantity only; record the supplier bill separately under Expenses if money was paid.</p><form id="stockForm"><div class="formgrid"><div><label for="stockProduct">Product</label><select id="stockProduct" required></select></div><div><label for="stockChange">Quantity change (+ or −)</label><input id="stockChange" type="number" step="any" required placeholder="e.g. 10 or -2"></div><div class="full"><label for="stockReason">Reason</label><input id="stockReason" maxlength="120" required placeholder="Purchase received, damage, correction"></div></div><button type="submit">Adjust stock</button></form><div id="stockHistory"></div></div>
+</div>
+
+<div id="reports" class="page hidden">
+<div class="card"><h2>Period summary</h2><label for="reportMonth">Select month (leave blank for all time)</label><input id="reportMonth" type="month"><div class="grid">
+<div class="metric"><small>Sales value</small><strong id="rSales">₹0</strong></div>
+<div class="metric"><small>Cash received</small><strong id="rReceived">₹0</strong></div>
+<div class="metric"><small>Expenses recorded</small><strong id="rExpenses">₹0</strong></div>
+<div class="metric"><small>Cash flow</small><strong id="rCash">₹0</strong></div>
+<div class="metric"><small>Outstanding dues</small><strong id="rDues">₹0</strong></div>
+<div class="metric"><small>Estimated gross profit on sold items</small><strong id="rGross">₹0</strong></div>
+</div><p class="hint">Cash flow = receipts actually received minus expenses recorded. Estimated gross profit = sale value minus product purchase cost for quantities sold. This is a simple management estimate, not formal accounting or tax profit.</p></div>
+<div class="card"><h2>Export / backup</h2><p class="hint">CSV files open in Excel. JSON backup contains all app records and can restore them later.</p><div class="actions"><button onclick="exportCSV('sales')">Export sales CSV</button><button onclick="exportCSV('expenses')">Export expenses CSV</button><button onclick="exportCSV('products')">Export inventory CSV</button><button onclick="exportCSV('receipts')">Export receipts CSV</button><button onclick="exportBackup()">Download full backup</button></div><hr style="border:0;border-top:1px solid var(--line);margin:16px 0"><label for="restoreFile">Restore from JSON backup (replaces current records)</label><input id="restoreFile" type="file" accept=".json,application/json"><button class="danger" onclick="restoreBackup()">Restore backup</button><p class="hint">Keep a copy somewhere safe. Restoring replaces all current app data.</p></div>
+<div class="card"><h2>Data management</h2><p class="hint">Delete all records only if you intentionally want to start over. Export a backup first.</p><button class="danger" onclick="clearAllData()">Delete all app data</button></div>
+</div>
+<footer>Business Ledger · Offline data stays in this browser on this phone.</footer>
+</main>
+<script>
+const DBKEY='business-ledger-v1';
+const blank=()=>({products:[],sales:[],expenses:[],receipts:[],stockMoves:[]});
+let db=loadDB();
+function loadDB(){try{return Object.assign(blank(),JSON.parse(localStorage.getItem(DBKEY)||'{}'))}catch(e){return blank()}}
+function saveDB(){localStorage.setItem(DBKEY,JSON.stringify(db));renderAll()}
+function id(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function today(){return new Date().toISOString().slice(0,10)}
+function money(n){return '₹'+Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function num(v){return Number(v)||0}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function fmtDate(d){return d?new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—'}
+function go(page){document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));document.getElementById(page).classList.remove('hidden');document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.page===page));window.scrollTo(0,0);renderAll()}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
+['saleDate','receiptDate','expDate'].forEach(x=>document.getElementById(x).value=today());
+function optionsForProducts(selected=''){let opts=db.products.map(p=>`<option value="${p.id}" ${p.id===selected?'selected':''}>${esc(p.name)}${p.sku?' · '+esc(p.sku):''} (stock ${p.stock})</option>`).join('');return '<option value="">Select product</option>'+opts}
+function renderSelects(){
+ const sp=document.getElementById('saleProduct'),st=document.getElementById('stockProduct');let s=sp.value,t=st.value;
+ sp.innerHTML=optionsForProducts(s);st.innerHTML=optionsForProducts(t);
+ const due=db.sales.filter(x=>x.due>0.00001);
+ const rs=document.getElementById('receiptSale'),old=rs.value;
+ rs.innerHTML='<option value="">Select outstanding sale</option>'+due.map(x=>`<option value="${x.id}" ${x.id===old?'selected':''}>${esc(x.customer||'Walk-in')} · ${esc(x.productName)} · due ${money(x.due)}</option>`).join('');
+}
+function listItem(title,sub,amount,extra='',buttons=''){return `<div class="listitem"><div class="row"><div style="min-width:0"><strong>${title}</strong><small>${sub}</small>${extra}</div><div style="text-align:right"><div class="amount">${amount}</div>${buttons}</div></div></div>`}
+function renderDashboard(){
+ const sales=db.sales.reduce((s,x)=>s+x.total,0),received=db.sales.reduce((s,x)=>s+x.paid,0)+db.receipts.reduce((s,x)=>s+x.amount,0),expenses=db.expenses.reduce((s,x)=>s+x.amount,0),dues=db.sales.reduce((s,x)=>s+x.due,0);
+ mSales.textContent=money(sales);mReceived.textContent=money(received);mExpenses.textContent=money(expenses);mDues.textContent=money(dues);
+ let events=[...db.sales.map(x=>({date:x.date,title:'Sale · '+x.productName,sub:(x.customer||'Walk-in customer')+' · '+x.qty+' unit(s)',amount:x.total})),...db.expenses.map(x=>({date:x.date,title:'Expense · '+x.category,sub:x.vendor||x.method,amount:-x.amount})),...db.receipts.map(x=>({date:x.date,title:'Payment received',sub:x.customer||x.method,amount:x.amount}))].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8);
+ recent.innerHTML=events.length?events.map(x=>listItem(esc(x.title),fmtDate(x.date)+' · '+esc(x.sub),money(x.amount), '', '')).join(''):'<div class="empty">No transactions yet. Add a sale or expense to get started.</div>';
+}
+function renderSales(){
+ const q=saleSearch.value.toLowerCase(),m=saleMonth.value;
+ let arr=[...db.sales].filter(x=>(!m||x.date.startsWith(m))&&(!q||[x.customer,x.productName,x.ref,x.notes].join(' ').toLowerCase().includes(q))).sort((a,b)=>b.date.localeCompare(a.date));
+ salesList.innerHTML=arr.length?arr.map(x=>listItem(esc(x.productName)+' × '+x.qty,fmtDate(x.date)+' · '+esc(x.customer||'Walk-in')+(x.ref?' · '+esc(x.ref):''),money(x.total),`<small>Received ${money(x.paid)} · Due ${money(x.due)}</small>`,`<div class="actions" style="justify-content:flex-end;margin-top:6px"><button class="secondary" style="padding:5px 8px;font-size:11px" onclick="deleteSale('${x.id}')">Delete</button></div>`)).join(''):'<div class="empty">No matching sales.</div>';
+ receiptHistory.innerHTML=[...db.receipts].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8).map(x=>listItem('Receipt · '+esc(x.customer||'Customer'),fmtDate(x.date)+' · '+esc(x.method),money(x.amount))).join('')||'<div class="empty">No additional receipts recorded.</div>';
+}
+function renderExpenses(){let q=expSearch.value.toLowerCase(),m=expMonth.value;let arr=[...db.expenses].filter(x=>(!m||x.date.startsWith(m))&&(!q||[x.category,x.vendor,x.ref,x.notes,x.method].join(' ').toLowerCase().includes(q))).sort((a,b)=>b.date.localeCompare(a.date));expensesList.innerHTML=arr.length?arr.map(x=>listItem(esc(x.category),fmtDate(x.date)+' · '+esc(x.vendor||x.method)+(x.ref?' · '+esc(x.ref):''),money(x.amount),x.notes?`<small>${esc(x.notes)}</small>`:'',`<div class="actions" style="justify-content:flex-end;margin-top:6px"><button class="secondary" style="padding:5px 8px;font-size:11px" onclick="deleteExpense('${x.id}')">Delete</button></div>`)).join(''):'<div class="empty">No matching expenses.</div>'}
+function renderInventory(){let q=prodSearch.value.toLowerCase();let arr=db.products.filter(p=>[p.name,p.sku,p.notes].join(' ').toLowerCase().includes(q));inventoryList.innerHTML=arr.length?arr.map(p=>listItem(esc(p.name),esc(p.sku||'No SKU')+' · Cost '+money(p.cost)+' · Sell '+money(p.price),p.stock+' in stock',`<small>Stock value ${money(p.stock*p.cost)} · ${p.stock<=p.low?'<span class="pill low">Low stock</span>':'<span class="pill">In stock</span>'}</small>`,`<div class="actions" style="justify-content:flex-end;margin-top:6px"><button class="secondary" style="padding:5px 8px;font-size:11px" onclick="editProduct('${p.id}')">Edit</button><button class="danger" style="padding:5px 8px;font-size:11px" onclick="deleteProduct('${p.id}')">Delete</button></div>`)).join(''):'<div class="empty">No products yet. Add your first product above.</div>';stockHistory.innerHTML=[...db.stockMoves].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6).map(x=>listItem(esc(x.productName),fmtDate(x.date)+' · '+esc(x.reason),(x.change>0?'+':'')+x.change)).join('')}
+function renderReports(){let m=reportMonth.value,within=d=>!m||d.startsWith(m);let sales=db.sales.filter(x=>within(x.date)),ex=db.expenses.filter(x=>within(x.date)),rec=db.receipts.filter(x=>within(x.date));let s=sales.reduce((a,x)=>a+x.total,0),r=sales.reduce((a,x)=>a+x.paid,0)+rec.reduce((a,x)=>a+x.amount,0),e=ex.reduce((a,x)=>a+x.amount,0),d=db.sales.reduce((a,x)=>a+x.due,0),gross=s-sales.reduce((a,x)=>a+x.costTotal,0);rSales.textContent=money(s);rReceived.textContent=money(r);rExpenses.textContent=money(e);rCash.textContent=money(r-e);rCash.className='';rDues.textContent=money(d);rGross.textContent=money(gross)}
+function renderAll(){renderSelects();renderDashboard();renderSales();renderExpenses();renderInventory();renderReports();updateSalePreview()}
+function updateSalePreview(){let p=db.products.find(x=>x.id===saleProduct.value),q=num(saleQty.value),price=salePrice.value===''?(p?p.price:0):num(salePrice.value);salePreview.textContent=p?`Total: ${money(q*price)} · Available stock: ${p.stock} · Cost estimate: ${money(q*p.cost)}`:'Select a product and quantity to calculate the total.'}
+saleProduct.addEventListener('change',()=>{let p=db.products.find(x=>x.id===saleProduct.value);if(p)salePrice.value=p.price;updateSalePreview()});['saleQty','salePrice'].forEach(x=>document.getElementById(x).addEventListener('input',updateSalePreview));
+saleForm.addEventListener('submit',e=>{e.preventDefault();let p=db.products.find(x=>x.id===saleProduct.value),qty=num(saleQty.value),price=num(salePrice.value),paid=num(salePaid.value),total=qty*price;if(!p)return alert('Please select a product.');if(qty<=0||price<0||paid<0)return alert('Enter valid quantity, price and payment.');if(qty>p.stock)return alert('Not enough stock. Available quantity: '+p.stock);if(paid>total+0.005)return alert('Amount received cannot exceed the sale total.');let sale={id:id(),date:saleDate.value,productId:p.id,productName:p.name,qty,price,cost:p.cost,total,paid,due:Math.max(0,total-paid),costTotal:qty*p.cost,customer:saleCustomer.value.trim(),method:saleMethod.value,ref:saleRef.value.trim(),notes:saleNotes.value.trim()};db.sales.push(sale);p.stock=+(p.stock-qty).toFixed(4);db.stockMoves.push({id:id(),date:sale.date,productId:p.id,productName:p.name,change:-qty,reason:'Sale'});saleForm.reset();saleDate.value=today();salePaid.value='0';saveDB();alert('Sale saved and stock updated.');});
+receiptForm.addEventListener('submit',e=>{e.preventDefault();let s=db.sales.find(x=>x.id===receiptSale.value),amount=num(receiptAmount.value);if(!s)return alert('Select an outstanding sale.');if(amount<=0||amount>s.due+0.005)return alert('Enter an amount no greater than the pending balance ('+money(s.due)+').');db.receipts.push({id:id(),date:receiptDate.value,saleId:s.id,customer:s.customer,amount,method:receiptMethod.value});s.paid+=amount;s.due=Math.max(0,s.total-s.paid);receiptForm.reset();receiptDate.value=today();saveDB();alert('Payment receipt saved.');});
+expenseForm.addEventListener('submit',e=>{e.preventDefault();db.expenses.push({id:id(),date:expDate.value,category:expCategory.value,amount:num(expAmount.value),method:expMethod.value,vendor:expVendor.value.trim(),ref:expRef.value.trim(),notes:expNotes.value.trim()});expenseForm.reset();expDate.value=today();saveDB();alert('Expense saved.');});
+productForm.addEventListener('submit',e=>{e.preventDefault();let pid=productId.value,old=db.products.find(x=>x.id===pid),name=prodName.value.trim();if(!name)return;let item={id:pid||id(),name,sku:prodSku.value.trim(),cost:num(prodCost.value),price:num(prodPrice.value),stock:num(prodStock.value),low:num(prodLow.value),notes:prodNotes.value.trim()};if(old){if(item.stock!==old.stock)db.stockMoves.push({id:id(),date:today(),productId:old.id,productName:name,change:item.stock-old.stock,reason:'Stock changed during product edit'});Object.assign(old,item)}else db.products.push(item);resetProductForm();saveDB();alert(old?'Product updated.':'Product added.');});
+stockForm.addEventListener('submit',e=>{e.preventDefault();let p=db.products.find(x=>x.id===stockProduct.value),change=num(stockChange.value),reason=stockReason.value.trim();if(!p)return alert('Select a product.');if(change===0)return alert('Quantity change cannot be zero.');if(p.stock+change<0)return alert('Stock cannot become negative.');p.stock=+(p.stock+change).toFixed(4);db.stockMoves.push({id:id(),date:today(),productId:p.id,productName:p.name,change,reason});stockForm.reset();saveDB();alert('Stock adjusted.');});
+function resetProductForm(){productForm.reset();productId.value='';prodLow.value='5';productSave.textContent='Save product';productCancel.classList.add('hidden')}
+function editProduct(pid){let p=db.products.find(x=>x.id===pid);if(!p)return;productId.value=p.id;prodName.value=p.name;prodSku.value=p.sku;prodCost.value=p.cost;prodPrice.value=p.price;prodStock.value=p.stock;prodLow.value=p.low;prodNotes.value=p.notes;productSave.textContent='Update product';productCancel.classList.remove('hidden');go('inventory');document.getElementById('prodName').focus()}
+function deleteProduct(pid){let p=db.products.find(x=>x.id===pid);if(!p)return;if(db.sales.some(s=>s.productId===pid))return alert('This product has sales history and cannot be deleted. You can edit its name or keep it for records.');if(confirm('Delete product '+p.name+'?')){db.products=db.products.filter(x=>x.id!==pid);saveDB()}}
+function deleteExpense(eid){if(confirm('Delete this expense record?')){db.expenses=db.expenses.filter(x=>x.id!==eid);saveDB()}}
+function deleteSale(sid){let s=db.sales.find(x=>x.id===sid);if(!s)return;if(db.receipts.some(r=>r.saleId===sid))return alert('This sale has additional receipt records. To protect the audit trail, it cannot be deleted.');if(confirm('Delete this sale and restore '+s.qty+' units to stock?')){let p=db.products.find(x=>x.id===s.productId);if(p)p.stock=+(p.stock+s.qty).toFixed(4);db.stockMoves.push({id:id(),date:today(),productId:s.productId,productName:s.productName,change:s.qty,reason:'Sale deleted / stock restored'});db.sales=db.sales.filter(x=>x.id!==sid);saveDB()}}
+['saleSearch','saleMonth'].forEach(x=>document.getElementById(x).addEventListener('input',renderSales));['expSearch','expMonth'].forEach(x=>document.getElementById(x).addEventListener('input',renderExpenses));['prodSearch'].forEach(x=>document.getElementById(x).addEventListener('input',renderInventory));reportMonth.addEventListener('input',renderReports);
+function download(name,content,type){let blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+function csvCell(v){let s=String(v??'');return '"'+s.replace(/"/g,'""')+'"'}
+function exportCSV(kind){let rows=db[kind]||[];if(!rows.length)return alert('No '+kind+' records to export.');let keys=[...new Set(rows.flatMap(x=>Object.keys(x)))];let csv=[keys.map(csvCell).join(','),...rows.map(x=>keys.map(k=>csvCell(x[k])).join(','))].join('\r\n');download('business-ledger-'+kind+'-'+today()+'.csv','\ufeff'+csv,'text/csv;charset=utf-8')}
+function exportBackup(){download('business-ledger-backup-'+today()+'.json',JSON.stringify({app:'Business Ledger',version:1,exportedAt:new Date().toISOString(),data:db},null,2),'application/json')}
+async function restoreBackup(){let f=restoreFile.files[0];if(!f)return alert('Choose a JSON backup file first.');if(!confirm('This will replace all current records. Export a backup of current data first if needed. Continue?'))return;try{let obj=JSON.parse(await f.text()),data=obj.data||obj;if(!Array.isArray(data.products)||!Array.isArray(data.sales)||!Array.isArray(data.expenses))throw Error('Invalid backup format');db=Object.assign(blank(),data);saveDB();restoreFile.value='';alert('Backup restored.')}catch(e){alert('Could not restore this file. Please choose a valid Business Ledger JSON backup.')}}
+function clearAllData(){if(confirm('Delete ALL products, sales, receipts, expenses and stock history from this device?')){if(confirm('This cannot be undone unless you have a backup. Delete everything?')){db=blank();saveDB();resetProductForm();alert('All app data deleted.')}}}
+if('serviceWorker' in navigator && location.protocol!=='file:'){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
+renderAll();
+</script>
+</body>
+</html>

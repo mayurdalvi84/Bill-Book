@@ -1,0 +1,12 @@
+{
+  "name": "Business Ledger - Expense and Inventory Tracker",
+  "short_name": "Business Ledger",
+  "description": "Offline sales, expenses, payments and inventory tracker",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3f6f4",
+  "theme_color": "#173b32",
+  "icons": []
+}
